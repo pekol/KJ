@@ -1,7 +1,7 @@
 {------------------------------------------------------------------------------
 
-  file Path2.hs
-  (C) 2012 Peter Kolek  Release 0.1.3
+  file Path.hs
+  (C) 2012 Peter Kolek  Release 0.1.4
   -----------------------------------
 
   Module Path for Travel Report program
@@ -12,12 +12,13 @@
 {-# LANGUAGE PatternGuards #-}
 
 
-module Path2 where
+module Path where
 
   import Control.Monad
   import Control.Monad.Trans
   import System.Random
   import Data.Maybe
+  import Data.List (find)
   import qualified Data.Map as M
 
   data Path = Path { fromP :: String,
@@ -169,11 +170,68 @@ module Path2 where
     return x
 
 {------------------------------------------------------------------------------
+  more efficient algorithm
+------------------------------------------------------------------------------}
+
+  -- Tr as Travel
+  data Tr = Tr { distT :: Int, startT :: String, endT :: String, wayT :: [Path] }
+
+  makeTr :: Int -> String -> String -> Way -> Tr
+  makeTr distP startP endP listP
+   | isValidWay listP && distP == distP' && startP == startP' && endP == endP'
+     = Tr { distT = distP, startT = startP, endT = endP, wayT = listP }
+   | otherwise
+     = Tr { distT = 0, startT = "", endT = "", wayT = [] }
+       where
+         startP' = fromP (head listP)         
+         endP' = toP (last listP)         
+         distP' = sumW listP
+  
+  singletonTr :: Path -> Tr
+  singletonTr p = makeTr (distP p) (fromP p) (toP p) [p]
+
+  addToTr :: Path -> Tr -> Tr
+  addToTr path tr = 
+    makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])
+  
+  -- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
+  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
+  buildTrList startPoint endPoint wantedDist pMap = build [] initList
+    where
+      lim = 45
+      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
+      -- predicate to tell if Tr starts end ends in the same place
+      isCircularTr tr = startT tr == endT tr
+      build :: [Tr] -> [Tr] -> [Tr]
+      build rsltList [] = rsltList
+      build rsltList buildList = do
+        bld  <- buildList 
+        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
+        bld' <- return $ addToTr addP bld
+        guard $ (distT bld') > wantedDist
+        rslt <- return bld'
+        guard $ isCircularTr rslt
+        guard $ distT rslt < (wantedDist - lim) 
+        build (rsltList ++ return rslt) (return bld')
+        
+{------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
 ------------------------------------------------------------------------------}
 
+  findStartP :: String -> Way -> Maybe Path 
+  findStartP st ps = find (\x -> st == fromP x) ps
+
+  pFromMaybe :: Maybe Path -> Path
+  pFromMaybe Nothing  = Path { fromP = "nil", toP = "nil", distP = 0 }
+  pFromMaybe (Just p) = p
+
   listFromMaybe :: [Maybe a] -> [a]
   listFromMaybe x = do
+    Just r <- x
+    return r
+
+  plistFromMaybe :: [Maybe Path] -> [Path]
+  plistFromMaybe x = do
     Just r <- x
     return r
   
@@ -184,11 +242,6 @@ module Path2 where
             dd = fst . head $ (reads d :: [(Int,String)])
   makePfromL _ = Nothing
 
-  plistFromMaybe :: [Maybe Path] -> [Path]
-  plistFromMaybe x = do
-    Just r <- x
-    return r
-
   getPList :: String -> [Maybe Path]
   getPList = map (makePfromL . words) . filter (not . null) .lines 
 
@@ -196,7 +249,7 @@ module Path2 where
   fGetPList = liftM getPList . readFile 
     
   makeMapP :: [Path] -> M.Map String [Path]
-  makeMapP ps = M.fromListWith (++) $ map (\p -> ((fromP p),[p])) ps
+  makeMapP ps = M.fromListWith (++) $ map (\p -> (fromP p, [p])) ps
 
 {------------------------------------------------------------------------------
   top down -> point free -> coding experiments

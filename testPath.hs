@@ -2,7 +2,7 @@
 {------------------------------------------------------------------------------
 
   file testPath2.hs
-  (C) Peter Kolek  Release 0.1.3
+  (C) Peter Kolek  Release 0.1.4
   -------------------------------
 
   improve to show and demonstrate the important parts of Path / Way modules
@@ -18,7 +18,7 @@ import Data.List (find)
 import Control.Monad
 import Data.Maybe
 import qualified Data.Map as M
-import Path2
+import Path
 
 
 ------------- functions for testing Path / Way modules functions -------------
@@ -81,13 +81,6 @@ testConstr = do
 helper functions here around startPoint and such
 ------------------------------------------------------------------------------}
 
-findStartP :: String -> Way -> Maybe Path 
-findStartP st ps = find (\x -> st == fromP x) ps
-
-pFromMaybe :: Maybe Path -> Path
-pFromMaybe Nothing  = Path { fromP = "nil", toP = "nil", distP = 0 }
-pFromMaybe (Just p) = p
-
 printRslt howMany resultList = 
   mapM_ putStrLn $ map displayW $ take howMany resultList
 
@@ -132,7 +125,10 @@ main = do
           rslt2 = buildTrList start start dist pMap
       putStrLn $ start ++ " " ++ show dist ++ " km  seed -> " ++ show rseed
       printRslt 1 rslt   -- one line way display
-      printWay 1 rslt 
+      printWay 1 rslt    -- table display
+      putStrLn "\n\n Test of Travel class algorithm ... \n\n"
+      printRslt 1 $ mapM wayT rslt2   -- one line way display
+      printWay 1 $ mapM wayT rslt2    -- table display
     else badStartPointMsg start paths
 
 --  testPlusP
