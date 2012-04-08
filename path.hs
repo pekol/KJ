@@ -175,7 +175,7 @@ module Path where
 
   -- Tr as Travel
   data Tr = Tr { distT :: Int, startT :: String, endT :: String, wayT :: [Path] }
-
+    deriving (Show)
   makeTr :: Int -> String -> String -> Way -> Tr
   makeTr distP startP endP listP
    | isValidWay listP && distP == distP' && startP == startP' && endP == endP'
@@ -205,14 +205,17 @@ module Path where
       build :: [Tr] -> [Tr] -> [Tr]
       build rsltList [] = rsltList
       build rsltList buildList = do
-        bld  <- buildList 
+        bld  <- buildList
         addP <- fromMaybe [] $ M.lookup (endT bld) pMap
         bld' <- return $ addToTr addP bld
-        guard $ (distT bld') > wantedDist
-        rslt <- return bld'
-        guard $ isCircularTr rslt
-        guard $ distT rslt < (wantedDist - lim) 
-        build (rsltList ++ return rslt) (return bld')
+        guard $ (distT bld') <= wantedDist
+        let rslt = filter (\t -> distT t > (wantedDist - lim)) $ return bld'
+--        guard $ not $ isCircularTr rslt
+--        guard $ distT rslt > (wantedDist - lim)
+--        build (return rslt ++ rsltList) (return bld')
+--        return bld'
+--        rslt  
+        build (rslt ++ rsltList) (return bld')
         
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
@@ -277,6 +280,7 @@ module Path where
   -- short way print function
   -- improvement : add line break after 70 chars or so
   displayW :: Way -> String
+  displayW [] = "\nEmpty way\n"
   displayW ww@(w:ws) = 
     let showToP   = (" -> " ++) . toP
 	showToPs  = concat . map (\x -> " -> " ++ toP x)
@@ -285,9 +289,15 @@ module Path where
   -- detailed Way print function
   -- use printf to improve output alignment
   showW :: Way -> String
+  showW [] = "\nEmpty way\n"
   showW ws = descrW ++ linesW ++ line_ ++ totalW ++ "\n" where 
     descrW = "\nKniha jizd z : " ++ fromP (head ws) ++ "\n" ++ line_
     linesW = concat $ map ((++ "\n") . showP) ws
     totalW = "Celkem najeto : " ++ (show $ sumP ws)
     line_  = "---------------------------------------\n"
 
+{------------------------------------------------------------------------------
+
+  displayTr :: Tr -> String
+
+------------------------------------------------------------------------------}
