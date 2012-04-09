@@ -126,7 +126,7 @@ main = do
       putStrLn $ start ++ " " ++ show dist ++ " km  seed -> " ++ show rseed
 --      printRslt 1 rslt   -- one line way display
 --      printWay 1 rslt    -- table display
-      putStrLn "\n\n Test of Travel class algorithm ... \n\n"
+      putStrLn "\n Test of Travel class algorithm ... \n"
 --      printRslt 1 $ mapM wayT rslt2   -- one line way display
 --      printWay 2 $ mapM wayT rslt2    -- one line way display
       print rslt2

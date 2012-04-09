@@ -197,14 +197,16 @@ module Path where
   addToTr path tr = 
     makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])
   
-  -- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
+  -- predicate to tell if Tr starts end ends in the same place
+  isCircularTr :: Tr -> Bool
+  isCircularTr tr = startT tr == endT tr
+  
+-- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
   buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
   buildTrList startPoint endPoint wantedDist pMap = build [] initList
     where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
-      -- predicate to tell if Tr starts end ends in the same place
-      isCircularTr tr = startT tr == endT tr
       build :: [Tr] -> [Tr] -> [Tr]
       build rsltList [] = rsltList
       build rsltList buildList = do
@@ -222,7 +224,10 @@ module Path where
 --        bld''
 --        rslt'
 --        build (rslt' ++ rsltList) bld''
-        if length (wayT (head bld'')) > 4 
+--      if length of way list inside Tr is greater than 4 ...            
+        if length (wayT (head bld'')) > 24 
+--        why this does not work ???           
+--        if length rslt' > 10 
           then rslt'
           else build (rslt' ++ rsltList) bld''
         
