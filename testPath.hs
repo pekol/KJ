@@ -122,7 +122,7 @@ main = do
   if isJust st 
     then do
       let -- rslt = solveWConstr rseed dist (fromJust st) ps
-          rslt2 = buildTrList2 start start dist pMap
+          rslt2 = buildTrList start start dist pMap
       putStrLn $ start ++ " " ++ show dist ++ " km  seed -> " ++ show rseed
 --      printRslt 1 rslt   -- one line way display
 --      printWay 1 rslt    -- table display

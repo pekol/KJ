@@ -218,33 +218,13 @@ module Path where
             rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
             rslt' = filter isCircularTr rslt
 --      if length of way list inside Tr is greater than 6 ...            
-        if length (wayT (head bld'')) > 12
+        if length (wayT (head bld'')) > 8
 --        why this does not work ???           
 --        if (length rslt' > 10)
           then rslt'
-          else build (rslt' ++ rsltList) bld''
+          else build (rslt' ++ rsltList) (nub bld'')
         
-  -- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
-  buildTrList2 :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
-  buildTrList2 startPoint endPoint wantedDist pMap = snd . build' $ build initList
-    where
-      lim = 25
-      initList :: [Tr]
-      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
-      build :: [Tr] -> ([Tr], [Tr])
-      build buildList = do
-        bld  <- buildList
-        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
-        bld' <- return $ addToTr addP bld
-        guard $ (distT bld') <= wantedDist
-        let bld'' = return bld'
-            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
-            rslt' = filter isCircularTr rslt
-        (rslt', bld'')
-      build' :: ([Tr],[Tr]) -> ([Tr],[Tr])
-      build' ([],rs) = ([],rs) 
-      build' (bl,rs) = build' (bld, rs ++ rslt) where
-        (rslt,bld) = build $ nub bl
+-- runState StateT with result added to State
         
 --  sort by distT        
 
