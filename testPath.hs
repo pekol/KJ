@@ -128,11 +128,11 @@ main = do
 --      printWay 1 rslt    -- table display
       putStrLn "\n Test of Travel class algorithm ... \n"
 --      printRslt 1 $ mapM wayT rslt2   -- one line way display
---      printWay 2 $ mapM wayT rslt2    -- one line way display
+      printWay 12 $ map wayT rslt2    -- one line way display
 --      print rslt2
       putStrLn $ "Number of results : " ++ show (length rslt2)
-      print $ map distT rslt2
-      print $ map (length . wayT) rslt2
+--      print $ map distT rslt2
+--      print $ map (length . wayT) rslt2
 --      mapM (liftM distT) rslt2
     
     else badStartPointMsg start paths
