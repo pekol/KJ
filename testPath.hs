@@ -122,14 +122,17 @@ main = do
   if isJust st 
     then do
       let -- rslt = solveWConstr rseed dist (fromJust st) ps
-          rslt2 = buildTrList start start dist pMap
+          rslt2 = buildTrList2 start start dist pMap
       putStrLn $ start ++ " " ++ show dist ++ " km  seed -> " ++ show rseed
 --      printRslt 1 rslt   -- one line way display
 --      printWay 1 rslt    -- table display
       putStrLn "\n Test of Travel class algorithm ... \n"
 --      printRslt 1 $ mapM wayT rslt2   -- one line way display
 --      printWay 2 $ mapM wayT rslt2    -- one line way display
-      print rslt2
+--      print rslt2
+      putStrLn $ "Number of results : " ++ show (length rslt2)
+      print $ map distT rslt2
+      print $ map (length . wayT) rslt2
 --      mapM (liftM distT) rslt2
     
     else badStartPointMsg start paths
