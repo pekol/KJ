@@ -175,7 +175,10 @@ module Path where
 
   -- Tr as Travel
   data Tr = Tr { distT :: Int, startT :: String, endT :: String, wayT :: [Path] }
-    deriving (Show)
+    deriving (Show, Eq)
+             
+  -- make instance of Ord
+             
   makeTr :: Int -> String -> String -> Way -> Tr
   makeTr distP startP endP listP
    | isValidWay listP && distP == distP' && startP == startP' && endP == endP'
@@ -198,7 +201,7 @@ module Path where
   buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
   buildTrList startPoint endPoint wantedDist pMap = build [] initList
     where
-      lim = 45
+      lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
       -- predicate to tell if Tr starts end ends in the same place
       isCircularTr tr = startT tr == endT tr
@@ -206,17 +209,25 @@ module Path where
       build rsltList [] = rsltList
       build rsltList buildList = do
         bld  <- buildList
+--        guard $ M.member (endT bld) pMap
+--        not helping, there is allways the reverse Path in pMap
         addP <- fromMaybe [] $ M.lookup (endT bld) pMap
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
-        let rslt = filter (\t -> distT t > (wantedDist - lim)) $ return bld'
+        let bld'' = return bld'
+            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
+            rslt' = filter isCircularTr rslt
 --        guard $ not $ isCircularTr rslt
 --        guard $ distT rslt > (wantedDist - lim)
---        build (return rslt ++ rsltList) (return bld')
---        return bld'
---        rslt  
-        build (rslt ++ rsltList) (return bld')
+--        bld''
+--        rslt'
+--        build (rslt' ++ rsltList) bld''
+        if length (wayT (head bld'')) > 4 
+          then rslt'
+          else build (rslt' ++ rsltList) bld''
         
+--  sort by distT        
+
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
 ------------------------------------------------------------------------------}

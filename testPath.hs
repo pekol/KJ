@@ -129,7 +129,8 @@ main = do
       putStrLn "\n\n Test of Travel class algorithm ... \n\n"
 --      printRslt 1 $ mapM wayT rslt2   -- one line way display
 --      printWay 2 $ mapM wayT rslt2    -- one line way display
-      print $ take 5 $ rslt2
+      print rslt2
+--      mapM (liftM distT) rslt2
     
     else badStartPointMsg start paths
 
