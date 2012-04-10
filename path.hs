@@ -1,7 +1,7 @@
 {------------------------------------------------------------------------------
 
   file Path.hs
-  (C) 2012 Peter Kolek  Release 0.1.4
+  (C) 2012 Peter Kolek  Release 0.1.5
   -----------------------------------
 
   Module Path for Travel Report program
@@ -177,7 +177,7 @@ module Path where
   data Tr = Tr { distT :: Int, startT :: String, endT :: String, wayT :: [Path] }
     deriving (Show, Read, Eq)
              
-  -- make instance of Ord
+  -- make instance of Ord ??
              
   makeTr :: Int -> String -> String -> Way -> Tr
   makeTr distP startP endP listP
@@ -224,32 +224,8 @@ module Path where
         guard $ (distT bld') <= wantedDist
         return bld'
 
--- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
---  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
---  buildTrList startPoint endPoint wantedDist pMap = build [] initList
---    where
---      lim = 25
---      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
---      build :: [Tr] -> [Tr] -> [Tr]
---      build rsltList [] = rsltList
---      build rsltList buildList = do
---        bld  <- buildList
---        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
---        bld' <- return $ addToTr addP bld
---        guard $ (distT bld') <= wantedDist
---        let bld'' = return bld'
---            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
---            rslt' = filter isCircularTr rslt
---      if length of way list inside Tr is greater than 6 ...            
---        if length (wayT (head bld'')) > 8
---        why this does not work ???           
---        if (length rslt' > 10)
---          then rslt'
---          else build (rslt' ++ rsltList) (nub bld'')
-        
--- runState StateT with result added to State
-        
---  sort by distT        
+--  runState StateT with result added to State  ???
+--  sortByDist  ???        
 
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 

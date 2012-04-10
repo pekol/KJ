@@ -1,8 +1,11 @@
 {------------------------------------------------------------------------------
 
-  file Path2.hs
-  (C) 2012 Peter Kolek  Release 0.1.3
-  -----------------------------------
+  file dev-path.hs
+  development notes for KJ project
+  git clone https://github.com/pekol/KJ
+
+  (C) 2012 Peter Kolek  Release 0.1.5
+  -------------------------------------
 
 	Wanted :
 
@@ -192,6 +195,87 @@
         guard $ dist rslt < (wantedDist - lim) 
         build (rsltList ++ return rslt) (return bld')
         
+{------------------------------------------------------------------------------
+  more efficient algorithm
+------------------------------------------------------------------------------}
+
+  -- Tr as Travel
+  data Tr = Tr { distT :: Int, startT :: String, endT :: String, wayT :: [Path] }
+    deriving (Show, Read, Eq)
+             
+  -- make instance of Ord ???
+             
+  makeTr :: Int -> String -> String -> Way -> Tr
+  makeTr distP startP endP listP
+   | isValidWay listP && distP == distP' && startP == startP' && endP == endP'
+     = Tr { distT = distP, startT = startP, endT = endP, wayT = listP }
+   | otherwise
+     = Tr { distT = 0, startT = "", endT = "", wayT = [] }
+       where
+         startP' = fromP (head listP)         
+         endP' = toP (last listP)         
+         distP' = sumW listP
+  
+  singletonTr :: Path -> Tr
+  singletonTr p = makeTr (distP p) (fromP p) (toP p) [p]
+
+  addToTr :: Path -> Tr -> Tr
+  addToTr path tr = 
+    makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])
+  
+  -- predicate to tell if Tr starts end ends in the same place
+  isCircularTr :: Tr -> Bool
+  isCircularTr tr = startT tr == endT tr
+
+  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
+  buildTrList startPoint endPoint wantedDist pMap = genRslt [] initList
+    where
+      lim = 25
+      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
+
+      genRslt rslt [] = rslt
+      genRslt rslt bld
+        | length rslt > 1000  = rslt       -- additional *STOP* condition
+        | otherwise           = genRslt rslt' bld' where
+            bld'   = if null bld then initList else build bld
+            rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
+            rslt'  = rslt ++ filter rsCond bld'
+
+      build :: [Tr] -> [Tr]
+      build [] = []
+      build buildList = do
+        bld  <- buildList
+        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
+        bld' <- return $ addToTr addP bld
+        guard $ (distT bld') <= wantedDist
+        return bld'
+
+-- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
+--  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
+--  buildTrList startPoint endPoint wantedDist pMap = build [] initList
+--    where
+--      lim = 25
+--      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
+--      build :: [Tr] -> [Tr] -> [Tr]
+--      build rsltList [] = rsltList
+--      build rsltList buildList = do
+--        bld  <- buildList
+--        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
+--        bld' <- return $ addToTr addP bld
+--        guard $ (distT bld') <= wantedDist
+--        let bld'' = return bld'
+--            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
+--            rslt' = filter isCircularTr rslt
+--      if length of way list inside Tr is greater than 6 ...            
+--        if length (wayT (head bld'')) > 8
+--        why this does not work ???           
+--        if (length rslt' > 10)
+--          then rslt'
+--          else build (rslt' ++ rsltList) (nub bld'')
+        
+-- runState StateT with result added to State ???
+        
+-- sort by distT        
   
 {------------------------------------------------------------------------------ 
   

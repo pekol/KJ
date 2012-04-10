@@ -2,7 +2,7 @@
 {------------------------------------------------------------------------------
 
   file testPath2.hs
-  (C) Peter Kolek  Release 0.1.4
+  (C) Peter Kolek  Release 0.1.5
   -------------------------------
 
   improve to show and demonstrate the important parts of Path / Way modules
