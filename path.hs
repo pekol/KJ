@@ -202,14 +202,14 @@ module Path where
   isCircularTr tr = startT tr == endT tr
 
   buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
-  buildTrList startPoint endPoint wantedDist pMap = build [] initList
+  buildTrList startPoint endPoint wantedDist pMap = genRslt [] initList
     where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
 
       genRslt rslt [] = rslt
-      genRslt rslt bld = 
-        | length rslt > 1000  = rslt       --> additional *STOP* condition
+      genRslt rslt bld
+        | length rslt > 1000  = rslt       -- additional *STOP* condition
         | otherwise           = genRslt rslt' bld' where
             bld'   = if null bld then initList else build bld
             rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
