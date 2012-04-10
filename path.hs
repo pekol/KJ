@@ -11,7 +11,6 @@
 
 {-# LANGUAGE PatternGuards #-}
 
-
 module Path where
 
   import Control.Monad
@@ -22,8 +21,8 @@ module Path where
   import qualified Data.Map as M
 
   data Path = Path { fromP :: String,
-       	      	     toP :: String,
-	             distP :: Int }  deriving (Show, Read, Eq)  
+                       toP :: String,
+                     distP :: Int }  deriving (Show, Read, Eq)  
   
   type Way = [Path]
 
@@ -207,6 +206,7 @@ module Path where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
 
+      genRslt :: [Tr] -> [Tr] -> [Tr]
       genRslt rslt [] = rslt
       genRslt rslt bld
         | length rslt > 1000  = rslt       -- additional *STOP* condition
@@ -223,9 +223,6 @@ module Path where
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
         return bld'
-
---  runState StateT with result added to State  ???
---  sortByDist  ???        
 
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
@@ -309,5 +306,8 @@ module Path where
 {------------------------------------------------------------------------------
 
   displayTr :: Tr -> String
+
+--  change buildTrList with runState StateT with result added to State  ???
+--  sortByDist  ???        
 
 ------------------------------------------------------------------------------}
