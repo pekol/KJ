@@ -200,29 +200,52 @@ module Path where
   -- predicate to tell if Tr starts end ends in the same place
   isCircularTr :: Tr -> Bool
   isCircularTr tr = startT tr == endT tr
-  
-  -- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
+
   buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
   buildTrList startPoint endPoint wantedDist pMap = build [] initList
     where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
-      build :: [Tr] -> [Tr] -> [Tr]
-      build rsltList [] = rsltList
-      build rsltList buildList = do
+
+      genRslt rslt [] = rslt
+      genRslt rslt bld = 
+        | length rslt > 1000  = rslt       --> additional *STOP* condition
+        | otherwise           = genRslt rslt' bld' where
+            bld'   = if null bld then initList else build bld
+            rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
+            rslt'  = rslt ++ filter rsCond bld'
+
+      build :: [Tr] -> [Tr]
+      build [] = []
+      build buildList = do
         bld  <- buildList
         addP <- fromMaybe [] $ M.lookup (endT bld) pMap
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
-        let bld'' = return bld'
-            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
-            rslt' = filter isCircularTr rslt
+        return bld'
+
+-- used fromMaybe as we are in list Monad fail works fine as [], try MaybeT ?
+--  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
+--  buildTrList startPoint endPoint wantedDist pMap = build [] initList
+--    where
+--      lim = 25
+--      initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
+--      build :: [Tr] -> [Tr] -> [Tr]
+--      build rsltList [] = rsltList
+--      build rsltList buildList = do
+--        bld  <- buildList
+--        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
+--        bld' <- return $ addToTr addP bld
+--        guard $ (distT bld') <= wantedDist
+--        let bld'' = return bld'
+--            rslt  = filter (\t -> distT t > (wantedDist - lim)) bld''
+--            rslt' = filter isCircularTr rslt
 --      if length of way list inside Tr is greater than 6 ...            
-        if length (wayT (head bld'')) > 8
+--        if length (wayT (head bld'')) > 8
 --        why this does not work ???           
 --        if (length rslt' > 10)
-          then rslt'
-          else build (rslt' ++ rsltList) (nub bld'')
+--          then rslt'
+--          else build (rslt' ++ rsltList) (nub bld'')
         
 -- runState StateT with result added to State
         
