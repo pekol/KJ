@@ -4,7 +4,6 @@
   file testPath2.hs
   (C) Peter Kolek  Release 0.1.5
   -------------------------------
-
   improve to show and demonstrate the important parts of Path / Way modules
 
 ------------------------------------------------------------------------------}
@@ -19,7 +18,6 @@ import Control.Monad
 import Data.Maybe
 import qualified Data.Map as M
 import Path
-
 
 ------------- functions for testing Path / Way modules functions -------------
 
@@ -132,7 +130,7 @@ main = do
 --      print rslt2
       putStrLn $ "Number of results : " ++ show (length rslt2)
 --      print $ map distT rslt2
---      print $ map (length . wayT) rslt2
+      print $ map (length . wayT) $ take 300 rslt2
 --      mapM (liftM distT) rslt2
     
     else badStartPointMsg start paths

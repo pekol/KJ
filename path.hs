@@ -3,7 +3,6 @@
   file Path.hs
   (C) 2012 Peter Kolek  Release 0.1.5
   -----------------------------------
-
   Module Path for Travel Report program
   Written for Haskell GHC 7.0.3 compiler
 
@@ -17,8 +16,9 @@ module Path where
   import Control.Monad.Trans
   import System.Random
   import Data.Maybe
-  import Data.List (find, nub)
+  import Data.List (find)
   import qualified Data.Map as M
+  import System.Random.Generators
 
   data Path = Path { fromP :: String,
                        toP :: String,
@@ -34,8 +34,9 @@ module Path where
   infixr 6 <+>
   (<+>) = plusP
 
-  addP :: Int -> Path -> Int
-  addP i p =  i + distP p
+  -- adding a distance to Path, ie. new path with distance increased by i
+  addDistP :: Path -> Int -> Path
+  addDistP p i = makeP (fromP p) (toP p) $ i + distP p
 
   sumP :: Way -> Int
   sumP []     = 0
@@ -46,6 +47,9 @@ module Path where
   sumW :: Way -> Int
   sumW = sum . map distP
 
+  addP :: Int -> Path -> Int
+  addP i p = i + distP p
+  
   -- another alternative to sumP
   sumWw :: Way -> Int
   sumWw = foldl addP 0
@@ -205,16 +209,14 @@ module Path where
     where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
-
       genRslt :: [Tr] -> [Tr] -> [Tr]
       genRslt rslt [] = rslt
       genRslt rslt bld
-        | length rslt > 1000  = rslt       -- additional *STOP* condition
+        | length rslt > 1000  = map adjustTrRand rslt  -- additional *STOP* cond
         | otherwise           = genRslt rslt' bld' where
             bld'   = if null bld then initList else build bld
             rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
             rslt'  = rslt ++ filter rsCond bld'
-
       build :: [Tr] -> [Tr]
       build [] = []
       build buildList = do
@@ -223,6 +225,20 @@ module Path where
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
         return bld'
+        
+  adjustTrRand :: Tr -> Tr
+  adjustTrRand tr
+    | null (wayT tr) = tr
+    | otherwise      = makeTr (dst + distT tr) (startT tr) (endT tr) ps where
+       adjs = randSupL (-1) 2 $ length (wayT tr)
+       ps   = zipWith addDistP (wayT tr) adjs
+       dst  = sum adjs
+       randSupL :: Int -> Int -> Int -> [Int]
+       randSupL from to i = take i $ runGenerator (distT tr) $ rangeG (from,to)
+    
+  randS :: Int -> Int -> Int -> [Int]
+  randS from to i = take i $ runGenerator i $ rangeG (from,to)
+
 
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
@@ -251,6 +267,9 @@ module Path where
             tt = t
             dd = fst . head $ (reads d :: [(Int,String)])
   makePfromL _ = Nothing
+
+  makeP :: String -> String -> Int -> Path
+  makeP ff tt dd = Path { fromP = ff, toP = tt, distP = dd }
 
   getPList :: String -> [Maybe Path]
   getPList = map (makePfromL . words) . filter (not . null) .lines 
