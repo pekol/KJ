@@ -135,7 +135,7 @@ main = do
       print $ map distT $ take 300 rslt2
       print $ map (length . wayT) rslt2
 --      mapM (liftM distT) rslt2
-    
+      putStrLn $ showTr (last rslt2)
     else badStartPointMsg start paths
 
 --  testPlusP

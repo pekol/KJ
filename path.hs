@@ -213,8 +213,8 @@ module Path where
       genRslt :: [Tr] -> [Tr] -> [Tr]
       genRslt rslt [] = rslt
       genRslt rslt bld
-        | length rslt > 1000  = map adjustTrRand rslt  -- additional *STOP* cond
-        | otherwise           = genRslt rslt' bld' where
+        | length rslt > 600  = map adjustTrRand rslt  -- additional *STOP* cond
+        | otherwise          = genRslt rslt' bld' where
             bld'   = if null bld then initList else build bld
             rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
             rslt'  = rslt ++ filter rsCond bld'
@@ -332,8 +332,6 @@ module Path where
     linesT = concat $ map ((++ "\n") . showPP) (wayT tr)
     
 {------------------------------------------------------------------------------
-
-  displayTr :: Tr -> String
 
   finalRandAdj :: Tr Int -> Tr
   finalRandAdj tr dist = 
