@@ -16,9 +16,10 @@ module Path where
   import Control.Monad.Trans
   import System.Random
   import Data.Maybe
-  import Data.List (find)
+  import Data.List (find, nub)
   import qualified Data.Map as M
   import System.Random.Generators
+  import Text.Printf
 
   data Path = Path { fromP :: String,
                        toP :: String,
@@ -221,7 +222,8 @@ module Path where
       build [] = []
       build buildList = do
         bld  <- buildList
-        addP <- fromMaybe [] $ M.lookup (endT bld) pMap
+        addP <- M.findWithDefault [] (endT bld) pMap        
+        -- addP <- fromMaybe [] $ M.lookup (endT bld) pMap
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
         return bld'
@@ -236,10 +238,6 @@ module Path where
        randSupL :: Int -> Int -> Int -> [Int]
        randSupL from to i = take i $ runGenerator (distT tr) $ rangeG (from,to)
     
-  randS :: Int -> Int -> Int -> [Int]
-  randS from to i = take i $ runGenerator i $ rangeG (from,to)
-
-
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
 ------------------------------------------------------------------------------}
@@ -302,6 +300,9 @@ module Path where
   showP :: Path -> String
   showP p = "Path: " ++ fromP p ++ " -> " ++ toP p ++ " => " 
             ++ show (distP p) ++ " km"
+  
+  showPP :: Path -> String
+  showPP p = printf "Path: %-12s -> %-12s => %4i km" (fromP p) (toP p) (distP p)
 
   -- short way print function
   -- improvement : add line break after 70 chars or so
@@ -322,9 +323,20 @@ module Path where
     totalW = "Celkem najeto : " ++ (show $ sumP ws)
     line_  = "---------------------------------------\n"
 
+  showTr :: Tr -> String  
+  showTr tr | distT tr == 0 = "\nEmpty way\n"
+            | otherwise     = descT ++ linesT ++ line_ ++ totalT ++ "\n" where
+    line_  = "--------------------------------------------------\n"
+    descT  = "\nKniha jizd z : " ++ startT tr ++ "\n" ++ line_
+    totalT = "Celkem najeto : " ++ show (distT tr)
+    linesT = concat $ map ((++ "\n") . showPP) (wayT tr)
+    
 {------------------------------------------------------------------------------
 
   displayTr :: Tr -> String
+
+  finalRandAdj :: Tr Int -> Tr
+  finalRandAdj tr dist = 
 
 --  change buildTrList with runState StateT with result added to State  ???
 --  sortByDist  ???        

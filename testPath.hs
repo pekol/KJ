@@ -84,6 +84,9 @@ printRslt howMany resultList =
 
 printWay howMany resultList = 
   mapM_ putStrLn $ map showW $ take howMany resultList
+  
+printT howMany resultList = 
+  mapM_ putStrLn $ map showTr $ take howMany resultList
 
 badStartPointMsg stPoint file = do
   putStr   $ "\nI am sorry, start point " ++ stPoint
@@ -126,11 +129,11 @@ main = do
 --      printWay 1 rslt    -- table display
       putStrLn "\n Test of Travel class algorithm ... \n"
 --      printRslt 1 $ mapM wayT rslt2   -- one line way display
-      printWay 12 $ map wayT rslt2    -- one line way display
+      printT 10 rslt2    -- one line way display
 --      print rslt2
       putStrLn $ "Number of results : " ++ show (length rslt2)
---      print $ map distT rslt2
-      print $ map (length . wayT) $ take 300 rslt2
+      print $ map distT $ take 300 rslt2
+      print $ map (length . wayT) rslt2
 --      mapM (liftM distT) rslt2
     
     else badStartPointMsg start paths
