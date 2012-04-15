@@ -194,6 +194,17 @@ module Path where
          endP' = toP (last listP)         
          distP' = sumW listP
   
+  trFromList :: Way -> Tr
+  trFromList listP
+   | isValidWay listP
+     = Tr { distT = distP', startT = startP', endT = endP', wayT = listP }
+   | otherwise
+     = Tr { distT = 0, startT = "", endT = "", wayT = [] }
+       where
+         startP' = fromP (head listP)         
+         endP' = toP (last listP)         
+         distP' = sumW listP
+  
   singletonTr :: Path -> Tr
   singletonTr p = makeTr (distP p) (fromP p) (toP p) [p]
 
@@ -346,12 +357,26 @@ module Path where
     totalT = "Celkem najeto : " ++ show (distT tr)
     linesT = concat $ map ((++ "\n") . showPP) (wayT tr)
     
-{------------------------------------------------------------------------------
-
-  finalRandAdj :: Tr Int -> Tr
-  finalRandAdj tr dist = 
-
---  change buildTrList with runState StateT with result added to State  ???
---  sortByDist  ???        
+{------------------------------------------------------------------------------    
 
 ------------------------------------------------------------------------------}
+
+  finalRandAdj :: Tr -> Int -> Tr
+  finalRandAdj tr dist
+    | distT tr == dist = tr
+    | distT tr < dist  = adj tr 1 (dist - distT tr)
+    | distT tr > dist  = adj tr (-1) (distT tr - dist)   
+    where gen = runGenerator dist $ rangeG (0,1)
+          len = length (wayT tr) - 1
+          adj :: Tr -> Int -> Int -> Tr
+          adj tr by steps = makeTr (distT tr + steps * by) 
+                            (startT tr) (endT tr) (adjPs (wayT tr) [] by steps gen)
+          adjPs :: [Path] -> [Path] -> Int -> Int -> [Int] -> [Path]
+          adjPs ps [] _ 0 _ = ps          
+          adjPs ps bs _ 0 _ = reverse bs ++ ps 
+          adjPs [] bs by tot (g:gs) = adjPs (reverse bs) [] by tot gs          
+          adjPs (p:ps) bs by tot (g:gs) = 
+            if g == 0
+            then adjPs ps (p:bs) by tot gs 
+            else adjPs ps ((makeP (fromP p) (toP p) (distP p + by)):bs) by (tot - 1) gs
+

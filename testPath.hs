@@ -12,6 +12,7 @@
 
 module Main where
 
+import System.IO
 import System.Console.CmdArgs
 import Data.List (find)
 import Control.Monad
@@ -64,7 +65,7 @@ testConstr = do
   putStrLn "Debug: read Paths from file"
   putStrLn "Debug: fGetPList \"test.paths\""
   x <- liftM plistFromMaybe $ fGetPList "test.paths"
-  print x
+  print $ take 10 x
   print $ sumW x
   -- putStrLn "Debug: sumW $ fGetPList1 \"test.paths\""
   _ <- liftM print $ liftM sumW $ liftM plistFromMaybe $ fGetPList1 "test.paths"
@@ -72,15 +73,24 @@ testConstr = do
   xxmap <- fGetPList11 "test.paths"
   if xmap == xxmap then putStrLn "xmap == xxmap where xxmap = fGetPList1 'test.paths'"
      else putStrLn "xmap /= xxmap where xxmap = fGetPList1 'test.paths'"
-  print $ take 2 $ xxmap          
+  print $ take 2 $ xxmap
+  let t = trFromList $ take 5 $ xxmap
+  putStrLn $ showTr t
+  putStrLn "upravit na ? km "
+  xd <- getLine
+  let xdist = fst $ head $ reads xd :: Int
+  let adjt = finalRandAdj t xdist
+  putStrLn $ "adjt Ma mat " ++ show xdist ++ " km ???"
+  hFlush stdout 
+  putStrLn $ showTr adjt
   let zmap = makeMapP $ (++) xmap $ map reverseP xmap
   let y = fromJust $ M.lookup "Praha" $ zmap
-  putStrLn "Z Prahy vedu cesty :"      
-  mapM_ putStrLn $ map showP $ fromJust $ M.lookup "Praha" zmap
+  putStrLn "Z Prahy vedu cesty ako :"      
+  mapM_ putStrLn $ map showP $ take 3 $ fromJust $ M.lookup "Praha" zmap
   putStrLn "Z Plzne vedu cesty :"      
-  mapM_ putStrLn $ map showP $ fromJust $ M.lookup "Plzen" zmap
+  mapM_ putStrLn $ map showP $ take 3 $ fromJust $ M.lookup "Plzen" zmap
   putStrLn "A z Vestca :"      
-  return $ fromJust $ M.lookup "Vestec" zmap  
+  return $ take 3 $ fromJust $ M.lookup "Vestec" zmap  
   
 {------------------------------------------------------------------------------
 helper functions here around startPoint and such

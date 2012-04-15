@@ -9,5 +9,8 @@ develop a tree based algorithm
 dates and times processing - add to data structure
 develop time and date processing /generation, simulation/
 
+--  change buildTrList with runState StateT with result added to State  ???
+--  sortByDist  ???        
+
 
 
