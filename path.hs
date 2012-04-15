@@ -197,9 +197,16 @@ module Path where
   singletonTr :: Path -> Tr
   singletonTr p = makeTr (distP p) (fromP p) (toP p) [p]
 
+  emptyTr :: Tr
+  emptyTr =  Tr { distT = 0, startT = "", endT = "", wayT = [] }
+
   addToTr :: Path -> Tr -> Tr
   addToTr path tr = 
     makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])
+  
+  -- predicate to tell if Tr is an empty Tr / alternative use maybe Tr
+  isEmptyTr :: Tr -> Bool
+  isEmptyTr = null . wayT 
   
   -- predicate to tell if Tr starts end ends in the same place
   isCircularTr :: Tr -> Bool
@@ -232,7 +239,7 @@ module Path where
   adjustTrRand tr
     | null (wayT tr) = tr
     | otherwise      = makeTr (dst + distT tr) (startT tr) (endT tr) ps where
-       adjs = randSupL (-1) 2 $ length (wayT tr)
+       adjs = randSupL (-2) 2 $ length (wayT tr)
        ps   = zipWith addDistP (wayT tr) adjs
        dst  = sum adjs
        randSupL :: Int -> Int -> Int -> [Int]
@@ -282,6 +289,14 @@ module Path where
   top down -> point free -> coding experiments
 ------------------------------------------------------------------------------}
   
+  -- getPList1 is similar to getPList but gets rid of Maybe by using mapMaybe
+  getPList1 :: String -> [Path]
+  getPList1 = mapMaybe (makePfromL . words) . filter (not . null) .lines 
+  
+  -- same as fgetPList but uses getPList1 to get rid of Maybe in resulting list
+  fGetPList11 :: String -> IO [Path]
+  fGetPList11 = liftM getPList1 . readFile 
+
   fGetPList1 :: String -> IO [Maybe Path]  
   fGetPList1 file = do
     txt <- readFile file

@@ -69,11 +69,18 @@ testConstr = do
   -- putStrLn "Debug: sumW $ fGetPList1 \"test.paths\""
   _ <- liftM print $ liftM sumW $ liftM plistFromMaybe $ fGetPList1 "test.paths"
   xmap <- liftM plistFromMaybe $ fGetPList1 "test.paths"
+  xxmap <- fGetPList11 "test.paths"
+  if xmap == xxmap then putStrLn "xmap == xxmap where xxmap = fGetPList1 'test.paths'"
+     else putStrLn "xmap /= xxmap where xxmap = fGetPList1 'test.paths'"
+  print $ take 2 $ xxmap          
   let zmap = makeMapP $ (++) xmap $ map reverseP xmap
   let y = fromJust $ M.lookup "Praha" $ zmap
+  putStrLn "Z Prahy vedu cesty :"      
   mapM_ putStrLn $ map showP $ fromJust $ M.lookup "Praha" zmap
+  putStrLn "Z Plzne vedu cesty :"      
   mapM_ putStrLn $ map showP $ fromJust $ M.lookup "Plzen" zmap
-  mapM_ putStrLn $ map showP $ fromJust $ M.lookup "Vestec" zmap  
+  putStrLn "A z Vestca :"      
+  return $ fromJust $ M.lookup "Vestec" zmap  
   
 {------------------------------------------------------------------------------
 helper functions here around startPoint and such
