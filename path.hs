@@ -14,6 +14,7 @@ module Path where
 
   import Control.Monad
   import Control.Monad.Trans
+  import Control.Monad.State
   import System.Random
   import Data.Maybe
   import Data.List (find, nub)
@@ -228,6 +229,7 @@ module Path where
     where
       lim = 25
       initList = map singletonTr $ fromMaybe [] $ M.lookup startPoint pMap
+      rgen = runGenerator wantedDist $ rangeG (-1,1)
       genRslt :: [Tr] -> [Tr] -> [Tr]
       genRslt rslt [] = rslt
       genRslt rslt bld
@@ -241,21 +243,18 @@ module Path where
       build buildList = do
         bld  <- buildList
         addP <- M.findWithDefault [] (endT bld) pMap        
-        -- addP <- fromMaybe [] $ M.lookup (endT bld) pMap
         bld' <- return $ addToTr addP bld
         guard $ (distT bld') <= wantedDist
         return bld'
-        
-  adjustTrRand :: Tr -> Tr
-  adjustTrRand tr
-    | null (wayT tr) = tr
-    | otherwise      = makeTr (dst + distT tr) (startT tr) (endT tr) ps where
-       adjs = randSupL (-2) 2 $ length (wayT tr)
-       ps   = zipWith addDistP (wayT tr) adjs
-       dst  = sum adjs
-       randSupL :: Int -> Int -> Int -> [Int]
-       randSupL from to i = take i $ runGenerator (distT tr) $ rangeG (from,to)
-    
+      adjustTrRand :: Tr -> Tr
+      adjustTrRand tr
+        | null (wayT tr) = tr
+        | otherwise      = trFromList ps 
+        where 
+              adjs = take (length (wayT tr)) rgen
+              ps   = zipWith addDistP (wayT tr) adjs
+              dst  = sum adjs
+              
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
 ------------------------------------------------------------------------------}
@@ -358,7 +357,7 @@ module Path where
     linesT = concat $ map ((++ "\n") . showPP) (wayT tr)
     
 {------------------------------------------------------------------------------    
-
+ run the generator inside buildTr and just take next rand numbers for use
 ------------------------------------------------------------------------------}
 
   finalRandAdj :: Tr -> Int -> Tr
@@ -367,16 +366,23 @@ module Path where
     | distT tr < dist  = adj tr 1 (dist - distT tr)
     | distT tr > dist  = adj tr (-1) (distT tr - dist)   
     where gen = runGenerator dist $ rangeG (0,1)
-          len = length (wayT tr) - 1
           adj :: Tr -> Int -> Int -> Tr
-          adj tr by steps = makeTr (distT tr + steps * by) 
-                            (startT tr) (endT tr) (adjPs (wayT tr) [] by steps gen)
+          adj tr by steps = makeTr (distT tr + steps * by) (startT tr) (endT tr) 
+                                   (adjPs (wayT tr) [] by steps gen)
           adjPs :: [Path] -> [Path] -> Int -> Int -> [Int] -> [Path]
           adjPs ps [] _ 0 _ = ps          
           adjPs ps bs _ 0 _ = reverse bs ++ ps 
           adjPs [] bs by tot (g:gs) = adjPs (reverse bs) [] by tot gs          
-          adjPs (p:ps) bs by tot (g:gs) = 
-            if g == 0
-            then adjPs ps (p:bs) by tot gs 
-            else adjPs ps ((makeP (fromP p) (toP p) (distP p + by)):bs) by (tot - 1) gs
+          adjPs (p:ps) bs by tot (g:gs) 
+            | g == 0    = adjPs ps (p:bs) by tot gs 
+            | otherwise = adjPs ps ((makeP (fromP p) (toP p)
+                                (distP p + by)):bs) by (tot - 1) gs
 
+
+              
+--            cut :: StateT [a] a
+--            cut = \(x:xs) -> return (x,xs)
+--            adj 0 = []
+--            adj i = cut:adj (i-1) 
+  
+    
