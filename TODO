@@ -1,3 +1,15 @@
+add private driving /extra paths, choosing files, Flag
+
+circular sub ways every day / 2 days / 3 days ...
+
+composition of sub ways /including optimization/
+
+total mileage must check /also with prev final way/, prev end point of way must
+    match current start point
+
+improve efficiency of buildListTr by randomly eliminateing choices /when there
+    are more than 2 choices in a single step/
+
 parsePaths
     isCity, isDistance, missingCiti, missingDistance, warnMoreThings
 
@@ -5,9 +17,16 @@ add the final adjustment method for optimal Tr
     randomly (incr/decr by 1) way steps
 
 wrap the whole program /main/ into a random generator ?
+
 develop a tree based algorithm
+
 dates and times processing - add to data structure
+
 develop time and date processing /generation, simulation/
+    Saturdays and Sundays and holidays only private driving
+
+alternatively use Data.Sequence instead of lists / DiffLists ???
+
 
 --  change buildTrList with runState StateT with result added to State  ???
 --  sortByDist  ???        

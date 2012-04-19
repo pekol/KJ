@@ -1,7 +1,7 @@
 
 {------------------------------------------------------------------------------
 
-  file testPath2.hs
+  file testPath.hs
   (C) Peter Kolek  Release 0.1.5
   -------------------------------
   improve to show and demonstrate the important parts of Path / Way modules
@@ -54,8 +54,9 @@ testPlusP = do
   print (isValidWay q)
   print (isValidWay qq)
   putStrLn $ displayW q
-  putStrLn "Tramtadada ..... :"
-  mapM_ putStrLn (map displayW $ take 15 $ solveWConstr 493 650 (ps!!7) ps)
+  putStrLn $ "Tramtadada ..... :" ++ showP (ps!!14)
+  
+  mapM_ (putStrLn . displayW) (take 1 $ solveWConstr 1493 250 (ps!!14) ps)
     
 testConstr = do
   putStrLn "Constraint tests"
@@ -68,13 +69,14 @@ testConstr = do
   print $ take 10 x
   print $ sumW x
   -- putStrLn "Debug: sumW $ fGetPList1 \"test.paths\""
-  _ <- liftM print $ liftM sumW $ liftM plistFromMaybe $ fGetPList1 "test.paths"
+  _ <- liftM (print . sumW . plistFromMaybe) $ fGetPList1 "test.paths"
   xmap <- liftM plistFromMaybe $ fGetPList1 "test.paths"
   xxmap <- fGetPList11 "test.paths"
-  if xmap == xxmap then putStrLn "xmap == xxmap where xxmap = fGetPList1 'test.paths'"
-     else putStrLn "xmap /= xxmap where xxmap = fGetPList1 'test.paths'"
-  print $ take 2 $ xxmap
-  let t = trFromList $ take 5 $ xxmap
+  if xmap == xxmap 
+    then putStrLn "xmap == xxmap where xxmap = fGetPList1 'test.paths'"
+    else putStrLn "xmap /= xxmap where xxmap = fGetPList1 'test.paths'"
+  print $ take 2 xxmap
+  let t = trFromList $ take 5 xxmap
   putStrLn $ showTr t
   putStrLn "upravit na ? km "
   xd <- getLine
@@ -84,11 +86,11 @@ testConstr = do
   hFlush stdout 
   putStrLn $ showTr adjt
   let zmap = makeMapP $ (++) xmap $ map reverseP xmap
-  let y = fromJust $ M.lookup "Praha" $ zmap
+  let y = fromJust $ M.lookup "Praha" zmap
   putStrLn "Z Prahy vedu cesty ako :"      
-  mapM_ putStrLn $ map showP $ take 3 $ fromJust $ M.lookup "Praha" zmap
+  mapM_ (putStrLn . showP) $ take 3 $ fromJust $ M.lookup "Praha" zmap
   putStrLn "Z Plzne vedu cesty :"      
-  mapM_ putStrLn $ map showP $ take 3 $ fromJust $ M.lookup "Plzen" zmap
+  mapM_ (putStrLn . showP) $ take 3 $ fromJust $ M.lookup "Plzen" zmap
   putStrLn "A z Vestca :"      
   return $ take 3 $ fromJust $ M.lookup "Vestec" zmap  
   
@@ -96,14 +98,15 @@ testConstr = do
 helper functions here around startPoint and such
 ------------------------------------------------------------------------------}
 
+printRslt :: Int -> [Way] -> IO()
 printRslt howMany resultList = 
-  mapM_ putStrLn $ map displayW $ take howMany resultList
+  mapM_ (putStrLn . displayW) $ take howMany resultList
 
 printWay howMany resultList = 
-  mapM_ putStrLn $ map showW $ take howMany resultList
+  mapM_ (putStrLn . showW) $ take howMany resultList
   
 printT howMany resultList = 
-  mapM_ putStrLn $ map showTr $ take howMany resultList
+  mapM_ (putStrLn . showTr) $ take howMany resultList
 
 badStartPointMsg stPoint file = do
   putStr   $ "\nI am sorry, start point " ++ stPoint

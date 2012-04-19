@@ -37,8 +37,14 @@ module Path where
   (<+>) = plusP
 
   -- adding a distance to Path, ie. new path with distance increased by i
+  addDistP1 :: Path -> Int -> Path
+  addDistP1 p i = makeP (fromP p) (toP p) $ i + distP p
+  
+  addDistP2 :: Path -> Int -> Path
+  addDistP2 p i = p {distP = new} where new = i + distP p
+  
   addDistP :: Path -> Int -> Path
-  addDistP p i = makeP (fromP p) (toP p) $ i + distP p
+  addDistP p i = p {distP = i + distP p}
 
   sumP :: Way -> Int
   sumP []     = 0
@@ -68,7 +74,7 @@ module Path where
     | otherwise             = []
 
   appendPath :: Way -> Path -> Way
-  appendPath [] p = p:[]
+  appendPath [] p = [p]
   appendPath ws p 
     | canChainP (last ws) p = ws ++ [p]
     | otherwise             = []
@@ -88,7 +94,7 @@ module Path where
   makeWay [] = []
   makeWay (x:[]) = [x]
   makeWay (x:y:xs)
-    | canChainP x y = x:(makeWay (y:xs))
+    | canChainP x y = x:makeWay (y:xs)
     | otherwise      = [] 
 
   canChainP :: Path -> Path -> Bool
@@ -157,12 +163,12 @@ module Path where
 
   makeSubLists fnTake _ _ []               = []
   makeSubLists fnTake start wanted pp@(p:ps) = 
-    (fnTake [start] wanted pp):(makeSubLists fnTake start wanted ps) 
+    fnTake [start] wanted pp : makeSubLists fnTake start wanted ps
 
   genInput :: Int ->[a] -> [a]
   genInput seed xs = 
-    let howMany = 1000
-        xx      = concat $ take howMany $ repeat $ shuffle seed (length xs) xs
+    let howMany = 600
+        xx      = concat $ replicate howMany $ shuffle seed (length xs) xs
     in shuffle seed (length xx) xx
 
   solveWConstr seed rsltWanted start ls = do
@@ -170,7 +176,7 @@ module Path where
         low  = rsltWanted - 2 * lim
     x <- makeSubLists takePt start rsltWanted $ genInput seed ls
     -- added constraint to finish at start, ie. fromP start == toP end
-    guard $ fromP (head x) == toP (last x)
+    -- guard $ fromP (head x) == toP (last x)
     guard $ sumP x > low
     return x
 
@@ -212,6 +218,7 @@ module Path where
   emptyTr :: Tr
   emptyTr =  Tr { distT = 0, startT = "", endT = "", wayT = [] }
 
+  -- append to Tr
   addToTr :: Path -> Tr -> Tr
   addToTr path tr = 
     makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])
@@ -224,7 +231,7 @@ module Path where
   isCircularTr :: Tr -> Bool
   isCircularTr tr = startT tr == endT tr
 
-  buildTrList :: String -> String -> Int -> (M.Map String [Path]) -> [Tr]
+  buildTrList :: String -> String -> Int -> M.Map String [Path] -> [Tr]
   buildTrList startPoint endPoint wantedDist pMap = genRslt [] initList
     where
       lim = 25
@@ -233,34 +240,34 @@ module Path where
       genRslt :: [Tr] -> [Tr] -> [Tr]
       genRslt rslt [] = rslt
       genRslt rslt bld
-        | length rslt > 600  = map adjustTrRand rslt  -- additional *STOP* cond
+        | length rslt > 1600 = map adjustTrRand rslt -- additional *STOP* cond
         | otherwise          = genRslt rslt' bld' where
             bld'   = if null bld then initList else build bld
-            rsCond = \t -> distT t > (wantedDist - lim) && isCircularTr t
+            rsCond t = distT t > (wantedDist - lim) && isCircularTr t
             rslt'  = rslt ++ filter rsCond bld'
+      -- restrict choice randomly somehow
       build :: [Tr] -> [Tr]
       build [] = []
       build buildList = do
         bld  <- buildList
-        addP <- M.findWithDefault [] (endT bld) pMap        
-        bld' <- return $ addToTr addP bld
-        guard $ (distT bld') <= wantedDist
+        add  <- M.findWithDefault [] (endT bld) pMap        
+        let bld' = addToTr add bld
+        guard $ distT bld' <= wantedDist
         return bld'
       adjustTrRand :: Tr -> Tr
       adjustTrRand tr
         | null (wayT tr) = tr
         | otherwise      = trFromList ps 
         where 
-              adjs = take (length (wayT tr)) rgen
-              ps   = zipWith addDistP (wayT tr) adjs
-              dst  = sum adjs
+          adjs = take (length (wayT tr)) rgen
+          ps   = zipWith addDistP (wayT tr) adjs
               
 {------------------------------------------------------------------------------
   read a list of Paths from a file : named "xxxx.paths" 
 ------------------------------------------------------------------------------}
 
   findStartP :: String -> Way -> Maybe Path 
-  findStartP st ps = find (\x -> st == fromP x) ps
+  findStartP st = find (\x -> st == fromP x)
 
   pFromMaybe :: Maybe Path -> Path
   pFromMaybe Nothing  = Path { fromP = "nil", toP = "nil", distP = 0 }
@@ -327,7 +334,7 @@ module Path where
             ++ show (distP p) ++ " km"
   
   showPP :: Path -> String
-  showPP p = printf "Path: %-12s -> %-12s => %4i km" (fromP p) (toP p) (distP p)
+  showPP p = printf "Path: %-15s -> %-15s => %4i km" (fromP p) (toP p) (distP p)
 
   -- short way print function
   -- improvement : add line break after 70 chars or so
@@ -335,8 +342,8 @@ module Path where
   displayW [] = "\nEmpty way\n"
   displayW ww@(w:ws) = 
     let showToP   = (" -> " ++) . toP
-	showToPs  = concat . map (\x -> " -> " ++ toP x)
-    in "Way : " ++ (fromP w) ++ (showToPs ww) ++ " => " ++ (show $ sumP ww)
+	showToPs  = concatMap (\x -> " -> " ++ toP x)
+    in "Way : " ++ fromP w ++ showToPs ww ++ " => " ++ show (sumP ww)
 
   -- detailed Way print function
   -- use printf to improve output alignment
@@ -344,17 +351,17 @@ module Path where
   showW [] = "\nEmpty way\n"
   showW ws = descrW ++ linesW ++ line_ ++ totalW ++ "\n" where 
     descrW = "\nKniha jizd z : " ++ fromP (head ws) ++ "\n" ++ line_
-    linesW = concat $ map ((++ "\n") . showP) ws
-    totalW = "Celkem najeto : " ++ (show $ sumP ws)
-    line_  = "---------------------------------------\n"
+    linesW = concatMap ((++ "\n") . showP) ws
+    totalW = "Celkem najeto : " ++ show (sumP ws)
+    line_  = "---------------------------------------------------\n"
 
   showTr :: Tr -> String  
   showTr tr | distT tr == 0 = "\nEmpty way\n"
             | otherwise     = descT ++ linesT ++ line_ ++ totalT ++ "\n" where
-    line_  = "--------------------------------------------------\n"
+    line_  = "---------------------------------------------------\n"
     descT  = "\nKniha jizd z : " ++ startT tr ++ "\n" ++ line_
     totalT = "Celkem najeto : " ++ show (distT tr)
-    linesT = concat $ map ((++ "\n") . showPP) (wayT tr)
+    linesT = concatMap ((++ "\n") . showPP) (wayT tr)
     
 {------------------------------------------------------------------------------    
  run the generator inside buildTr and just take next rand numbers for use
@@ -375,14 +382,6 @@ module Path where
           adjPs [] bs by tot (g:gs) = adjPs (reverse bs) [] by tot gs          
           adjPs (p:ps) bs by tot (g:gs) 
             | g == 0    = adjPs ps (p:bs) by tot gs 
-            | otherwise = adjPs ps ((makeP (fromP p) (toP p)
-                                (distP p + by)):bs) by (tot - 1) gs
+            | otherwise = adjPs ps (makeP (fromP p) (toP p)
+                                (distP p + by):bs) by (tot - 1) gs
 
-
-              
---            cut :: StateT [a] a
---            cut = \(x:xs) -> return (x,xs)
---            adj 0 = []
---            adj i = cut:adj (i-1) 
-  
-    
