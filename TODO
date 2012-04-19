@@ -1,3 +1,5 @@
+
+
 add private driving /extra paths, choosing files, Flag
 
 circular sub ways every day / 2 days / 3 days ...
@@ -27,9 +29,10 @@ develop time and date processing /generation, simulation/
 
 alternatively use Data.Sequence instead of lists / DiffLists ???
 
-
 --  change buildTrList with runState StateT with result added to State  ???
---  sortByDist  ???        
 
+--  sortTrByDist, steps  ???        
+
+-- compare Tr by dist, steps ???
 
 

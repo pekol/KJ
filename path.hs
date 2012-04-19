@@ -161,7 +161,7 @@ module Path where
     ps is a list of possible Paths to use
 ------------------------------------------------------------------------------}
 
-  makeSubLists fnTake _ _ []               = []
+  makeSubLists fnTake _ _ []                 = []
   makeSubLists fnTake start wanted pp@(p:ps) = 
     fnTake [start] wanted pp : makeSubLists fnTake start wanted ps
 
@@ -218,7 +218,7 @@ module Path where
   emptyTr :: Tr
   emptyTr =  Tr { distT = 0, startT = "", endT = "", wayT = [] }
 
-  -- append to Tr
+  -- append to Tr, non safe version, assumes that path is chainable with Tr
   addToTr :: Path -> Tr -> Tr
   addToTr path tr = 
     makeTr (distT tr + distP path) (startT tr) (toP path) (wayT tr ++ [path])

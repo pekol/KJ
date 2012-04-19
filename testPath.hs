@@ -140,8 +140,9 @@ main = do
   let ps = a ++ map reverseP a
       st = findStartP start ps 
       pMap = makeMapP ps
-  if isJust st 
-    then do
+  if isNothing st 
+    then badStartPointMsg start paths
+    else do
       let -- rslt = solveWConstr rseed dist (fromJust st) ps
           rslt2 = buildTrList start start dist pMap
       putStrLn $ start ++ " " ++ show dist ++ " km  seed -> " ++ show rseed
@@ -152,11 +153,9 @@ main = do
       printT 10 rslt2    -- one line way display
 --      print rslt2
       putStrLn $ "Number of results : " ++ show (length rslt2)
-      print $ map distT $ take 300 rslt2
-      print $ map (length . wayT) rslt2
---      mapM (liftM distT) rslt2
+--      print $ map distT $ take 300 rslt2
+--      print $ map (length . wayT) rslt2
       putStrLn $ showTr (last rslt2)
-    else badStartPointMsg start paths
 
 --  testPlusP
 --  testConstr
